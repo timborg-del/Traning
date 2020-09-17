@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace HängaGubbe
 {
@@ -42,118 +43,110 @@ namespace HängaGubbe
             //string random = (secretWord[new Random().next])
             //Random rand = new Random();
             //int index = rand.Next(secretWord.Length);
-            //string[] words = new string[4];   //
-            //words[0] = "Sverige";
-            //words[1] = "Norge";
-            //words[2] = "Finland";
-            //words[3] = "Finland";
+            string[] words = new string[4];
+            words[0] = "sverige";
+            words[1] = "norge";
+            words[2] = "finland";        //length för array pekar direkt på storleken medans en count räknar elementen. count mer till lista..
+            words[3] = "danmark";
 
             var random = new Random();
-            var words = new List<string> { "sverige", "finland", "danmark", "norge" };
-            int index = random.Next(words.Count);
+            int index = random.Next(words.Length);
+
+            //hämtar ut hemligheten ur arrayen med index som vi fick från random
+            string secret = words[index];
+
             // Kolla upp hur jag ska flytta en sträng från random från en string array.
-            
-            
 
 
-            List<string> letterGuessed = new List<string>(); // Alternativ "static void ExKeyChar ()" char aSymbole1 = Console.Readkey().KeyChar aSymbole2 = Console.Readkey(true).KeyChar
-            int live = 10;
+            int health = 10;
             Console.WriteLine("Welcome To Hangman Game");
-            Console.WriteLine("Guess for what country in scandinavia im thinking of its {0} countrys to geuss on", .Length);
-            Console.WriteLine("you have {0} in health", live); // Liv index
-            Isletter(secret, letterGuessed); // kallar på Metoden 
-            while (live > 0)
+            Console.WriteLine("Guess for what country in scandinavia im thinking of its {0} countrys to geuss on", words.Length);
+            Console.WriteLine("you have {0} in health", health); // Liv index
+
+            StringBuilder lettersGuessed = new StringBuilder();
+            string progress = CheckProgress(secret, lettersGuessed.ToString());
+
+            Console.WriteLine(progress);  //Skriver ut fel och rätt.
+
+            while (health > 0)
             {
                 string input = Console.ReadLine();
-                if (letterGuessed.Contains(input))
+                if (lettersGuessed.ToString().Contains(input))
                 {
                     Console.WriteLine("You enter letter [{0}] already", input);
-                    Console.WriteLine("Try a Drifferent Word");
-                    GetAlphabet(input); // här måste vi kalla på kod för att kolla alfabete 
+                    Console.WriteLine("Try a Drifferent Letter");
                     continue;
-                }//skriver ut gissad bokstav
-                letterGuessed.Add(input);
-                if (IsWord(secret, letterGuessed))
+                }
+
+                lettersGuessed.Append(input);
+                if (CheckCorrectWord(secret, lettersGuessed.ToString())) /// lista utav av bokstäver som conventeras till sträng...
                 {
-                    Console.WriteLine(secretWord);
+                    Console.WriteLine(secret); // är rätt ord 
                     Console.WriteLine("Congratzzz!!");
                     break;
                 }
-                else if (secretWord[4].Contains(input))  //Contains char or text  for place it in right order Use secretWordindexOF  Stringbuilder.Tostring().contains Do not work with special char.
+
+                // Gissningen var rätt på bokstav
+                if (secret.Contains(input))  //Contains char or text  for place it in right order Use secretWordindexOF  Stringbuilder.Tostring().contains Do not work with special char.
                 {
                     Console.WriteLine("Nice entry");
-                    string letters = Isletter(secretWord, letterGuessed);
-                    Console.WriteLine(letters);
+                    progress = CheckProgress(secret, lettersGuessed.ToString());
+                    Console.WriteLine(progress);
+                    continue;
                 }
-                else
-                {
-                    Console.WriteLine("Letter not in my word");   //If im guessing wrong im -=1 in health and array points at health
-                    live -= 1; // ??
-                    Console.WriteLine("you have in health {0}", live);
-                }
+               
+                Console.WriteLine("Letter not in my word");   //If im guessing wrong im -=1 in health and array points at health
+                health--; // ??
+                Console.WriteLine("you have in health {0}", health);
+                
                 Console.WriteLine();
-                if (live == 0)
+                if (health == 0)
                 {
-                    Console.WriteLine("Game Over \nMy Secret Word is [ {0} {1} {2} {3} ]", secretWord);
+                    Console.WriteLine("Game Over \nMy Secret Word is [ {0} {1} {2} {3} ]", secret);
                     break;
                 }
             }
             Console.ReadKey();
         }
-        static bool IsWord(string[] secretWord, List<string> lettersGuessed) // Lägg till 
+        static bool CheckCorrectWord(string secret, string lettersGuessed) // Lägg till 
         {
-            bool word = false;
-            for (int i = 0; i < secretWord.Length; i++)
+
+            foreach (char secretLetter in secret)
             {
-                string c = Convert.ToString(secretWord[i]);
-                if (lettersGuessed.Contains(c))
+                //Gissningarna innehåller inte bokstaven vi är på, kan ej vara rätt ord
+                if (!lettersGuessed.Contains(secretLetter.ToString()))
                 {
-                    word = true;
-                }
-                else
-                {
-                    return word = false;
+                    return false;
                 }
             }
-            return word;
+            //Check letter. 
+
+            //for (int i = 0; i < secret.Length; i++)
+            //{
+            //    if (!lettersGuessed.Contains(secret[i].ToString())) // inte [i] för att kunna plocka ut en bokstav ur ordet.
+            //    {
+            //        return false;
+            //    }
+            //}
+
+            // Alla bokstäver i hemliga ordet finns i gissningarna, rätt ord!
+            return true;
         }
-        static string Isletter(string[] secretWord, List<string> lettersGuessed) // Kör for loop kollar så att att om bokstaven finns i index alltså ordet och ger antingen ut bokstaven eller text handling hon the right side
+
+        static string CheckProgress(string secret, string lettersGuessed) // Kör for loop kollar så att att om bokstaven finns i index alltså ordet och ger antingen ut bokstaven eller text handling hon the right side
         {
-            string correctletters = "";
-            for (int i = 0; i < secretWord.Length; i++)
+            StringBuilder progress = new StringBuilder();
+
+            foreach(char secretLetter in secret)
             {
-                string c = Convert.ToString(secretWord[i]);
-                if (lettersGuessed.Contains(c))
-                {
-                    correctletters += c;
+                if(lettersGuessed.Contains(secretLetter.ToString())) {
+                    progress.Append(secretLetter);
+                    continue;
                 }
-                else
-                {
-                    correctletters += "_ ";
-                }
+                progress.Append("_ ");
             }
-            return correctletters;
-        }
-        static void GetAlphabet(string letters)
-        {
-            List<string> alphabet = new List<string>();
-            for (int i = 1; i < 100; i++) // engelskt alfabet.  // 26 alternativ bokstäver ta bort en 
-            {
-                char alpha = Convert.ToChar(i + 96); //?? Acii
-                alphabet.Add(Convert.ToString(alpha));
-            }
-            int num = 49; //ascci
-            Console.WriteLine("letters left are :");  // berättar hur många bokstäver det finns kvar.
-            for (int i = 0; i < num; i++)
-            {
-                if (letters.Contains(letters))
-                {
-                    alphabet.Remove(letters);
-                    num -= 1;
-                }
-                Console.Write("[" + alphabet[i] + "] ");    // Kolla tangentbordet alfabetet
-            }
-            Console.WriteLine();
+
+            return progress.ToString();
         }
     }
 }
